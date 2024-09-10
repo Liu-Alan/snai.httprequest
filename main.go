@@ -8,9 +8,32 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
+
+// 调用方法 filepath, _ := downloadFile("https://xxx/854ce87b115d474f7.pdf", "854ce87b115d474f7.pdf","./storage")
+func DownloadFile(url, filename string, path string) (string, error) {
+	res, err := http.Get(url)
+	if err != nil {
+		return "", fmt.Errorf("文件下载出错，检查文件地址: %v", err)
+	}
+	filePath := filepath.Join(path, filename)
+	os.MkdirAll(path, 0755)
+	f, err := os.Create(filePath)
+	if err != nil {
+		return "", fmt.Errorf("文件保存出错，检查目录: %v", err)
+	}
+	_, err = io.Copy(f, res.Body)
+	if err != nil {
+		return "", fmt.Errorf("文件保存出错: %v", err)
+	}
+
+	defer f.Close()
+	return filePath, nil
+}
 
 func HttpRequestForm(method string, urlPath string, headerMap map[string]string, parms map[string]string) ([]byte, error) {
 	if urlPath == "" {
